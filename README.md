@@ -277,9 +277,14 @@ retrieval has little to work with.
 ### Choosing Top-K
 
 Top-K is configurable in the sidebar. The default of 5 was chosen by sweeping
-it against ground truth over all 300 cases:
+it against ground truth over all 300 cases.
 
-| Top-K | Category accuracy | Priority accuracy | Under-triage rate |
+Note that this sweep isolates the **retrieval component**: the category column
+is the accuracy of the neighbour vote on its own, with no LLM involved, which
+is why it reads lower than the 85.8% headline for the full pipeline. Isolating
+it is the point, since Top-K only affects retrieval.
+
+| Top-K | Category acc. (kNN only) | Priority accuracy | Under-triage rate |
 |---|---|---|---|
 | 1 | 77.7% | 52.7% | 17.3% |
 | 3 | 80.7% | 54.3% | 16.7% |

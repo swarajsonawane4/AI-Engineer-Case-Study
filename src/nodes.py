@@ -293,8 +293,9 @@ Assigned to: {queue}
 Similar past inquiries:
 {examples}
 
-Write one or two sentences describing the concrete next action. No greeting, \
-no sign-off, no bullet points."""
+Write at most two short sentences, 35 words in total, describing the concrete \
+next action for the agent. No greeting, no sign-off, no bullet points, and do \
+not restate the inquiry."""
 
 
 def make_notes_node():
@@ -323,13 +324,34 @@ def make_notes_node():
     return notes
 
 
+MAX_NOTE_WORDS = 35
+
+
 def _tidy_note(text: str) -> str:
-    """Trim the note to the one-to-two sentences the output format asks for."""
+    """Trim the note to the one or two lines the output format asks for.
+
+    Small models tend to keep elaborating past the instruction, so the length
+    is enforced here rather than trusted to the prompt.
+    """
     cleaned = " ".join(text.split())
     sentences = [s.strip() for s in cleaned.split(". ") if s.strip()]
-    if len(sentences) <= 2:
-        return cleaned
-    return ". ".join(sentences[:2]).rstrip(".") + "."
+
+    kept: list[str] = []
+    words = 0
+    for sentence in sentences[:2]:
+        n = len(sentence.split())
+        if kept and words + n > MAX_NOTE_WORDS:
+            break
+        kept.append(sentence)
+        words += n
+        if words >= MAX_NOTE_WORDS:
+            break
+
+    note = ". ".join(kept).rstrip(".") + "."
+    # A single runaway sentence still has to be cut somewhere.
+    if len(note.split()) > MAX_NOTE_WORDS + 8:
+        note = " ".join(note.split()[:MAX_NOTE_WORDS]).rstrip(",.;") + "."
+    return note
 
 
 # --- 7. Escalation decision ---------------------------------------------
