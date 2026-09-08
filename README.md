@@ -334,9 +334,18 @@ laptop with no network call.
 
 ---
 
+## Presentation
+
+The slide deck is in this repository at `presentation/index.html`. Open it in a
+browser and use the arrow keys to move between slides. Press **N** to toggle
+speaker notes.
+
+---
+
 ## Project layout
 
 ```
+presentation/index.html  Slide deck (Part B)
 app/app.py             Streamlit chat UI, wired to the pipeline
 src/config.py          All tunables and measured constants
 src/knowledge_base.py  Loading, embedding, Chroma store, retrieval

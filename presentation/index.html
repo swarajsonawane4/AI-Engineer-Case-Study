@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Inquiry Triage</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#EFF2F4; --surface:#FFFFFF; --surface-2:#F6F8F9;
+  --ink:#16212A; --ink-soft:#5A6B78; --ink-faint:#8496A2;
+  --rule:#D5DEE3; --rule-soft:#E6ECEF;
+  --accent:#1F5F80;
+  --series-a:#3585B4; --series-b:#C77B12;
+  --prio-low:#4A7C59; --prio-med:#A8761C; --prio-high:#AF3527;
+  --shadow:0 1px 2px rgba(22,33,42,.06), 0 8px 24px rgba(22,33,42,.07);
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1418; --surface:#171F25; --surface-2:#1D262D;
+    --ink:#E4EDF2; --ink-soft:#93A5B1; --ink-faint:#6D808D;
+    --rule:#28343C; --rule-soft:#212C33;
+    --accent:#6FB3D2;
+    --series-a:#3585B4; --series-b:#C77B12;
+    --prio-low:#6FA37D; --prio-med:#CE9A38; --prio-high:#D46455;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1418; --surface:#171F25; --surface-2:#1D262D;
+  --ink:#E4EDF2; --ink-soft:#93A5B1; --ink-faint:#6D808D;
+  --rule:#28343C; --rule-soft:#212C33;
+  --accent:#6FB3D2;
+  --series-a:#3585B4; --series-b:#C77B12;
+  --prio-low:#6FA37D; --prio-med:#CE9A38; --prio-high:#D46455;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--body); font-size:16px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.deck{ display:flex; flex-direction:column; align-items:center; gap:22px; padding:22px 18px 120px; }
+
+.slide{
+  width:min(100%,1060px); background:var(--surface); border:1px solid var(--rule);
+  border-radius:6px; box-shadow:var(--shadow);
+  aspect-ratio:16/9; min-height:520px;
+  padding:34px 46px 28px; display:flex; flex-direction:column;
+  scroll-margin-top:20px;
+}
+.slide__body{ flex:1; min-height:0; overflow-y:auto; }
+
+.eyebrow{
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-faint); display:flex; align-items:center; gap:10px; margin-bottom:14px;
+}
+.eyebrow::after{ content:""; flex:1; height:1px; background:var(--rule-soft); }
+h1{ font-family:var(--display); font-size:clamp(30px,4.2vw,46px); font-weight:700; line-height:1.05;
+    letter-spacing:-.02em; margin:0 0 14px; text-wrap:balance; }
+h2{ font-family:var(--display); font-size:clamp(20px,2.4vw,27px); font-weight:600; line-height:1.15;
+    letter-spacing:-.01em; margin:0 0 13px; text-wrap:balance; }
+h3{ font-family:var(--display); font-size:14px; font-weight:600; margin:0 0 8px; letter-spacing:.01em; }
+p{ margin:0 0 12px; max-width:66ch; color:var(--ink-soft); }
+p.lead{ font-size:17px; color:var(--ink); max-width:60ch; }
+strong{ color:var(--ink); font-weight:600; }
+
+/* Title slide */
+.title-slide{ justify-content:center; }
+.title-meta{ display:flex; gap:28px; flex-wrap:wrap; margin-top:26px;
+  font-family:var(--mono); font-size:12px; color:var(--ink-faint); }
+.title-meta span{ display:block; color:var(--ink); font-family:var(--body); font-size:14px; margin-top:3px; }
+.pipeline-strip{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:30px;
+  font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); }
+.pipeline-strip b{ background:var(--surface-2); border:1px solid var(--rule-soft);
+  border-radius:3px; padding:4px 9px; font-weight:500; color:var(--ink); }
+.pipeline-strip i{ color:var(--ink-faint); font-style:normal; }
+
+/* Generic blocks */
+.cols{ display:grid; gap:26px; }
+.cols--2{ grid-template-columns:1fr 1fr; }
+.cols--3{ grid-template-columns:repeat(3,1fr); }
+ul{ margin:0 0 12px; padding-left:19px; color:var(--ink-soft); }
+li{ margin-bottom:7px; }
+li::marker{ color:var(--ink-faint); }
+
+.point{ border-left:2px solid var(--accent); padding-left:14px; }
+.point h3{ color:var(--ink); }
+.point p{ margin:0; font-size:14px; line-height:1.45; }
+
+table{ border-collapse:collapse; width:100%; font-size:13.5px; }
+th,td{ text-align:left; padding:7px 10px; border-bottom:1px solid var(--rule-soft); }
+th{ font-family:var(--mono); font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:500; }
+td{ color:var(--ink-soft); }
+td.num,th.num{ text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+tr.is-key td{ color:var(--ink); font-weight:600; background:var(--surface-2); }
+.table-wrap{ overflow-x:auto; }
+
+.pill{ display:inline-block; font-family:var(--mono); font-size:11px; padding:2px 7px;
+  border-radius:3px; border:1px solid currentColor; }
+.pill--low{ color:var(--prio-low); } .pill--med{ color:var(--prio-med); } .pill--high{ color:var(--prio-high); }
+
+.output{ font-family:var(--mono); font-size:13px; background:var(--surface-2);
+  border:1px solid var(--rule-soft); border-radius:5px; padding:16px 18px; overflow-x:auto; }
+.output div{ margin-bottom:4px; white-space:nowrap; }
+.output .k{ color:var(--ink-faint); }
+.output .v{ color:var(--ink); }
+
+.stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule-soft);
+  border:1px solid var(--rule-soft); border-radius:5px; overflow:hidden; }
+.stat{ background:var(--surface); padding:16px 18px; }
+.stat .n{ font-family:var(--display); font-size:30px; font-weight:700; letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums; }
+.stat .l{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+
+figure{ margin:0; }
+figcaption{ font-size:12px; color:var(--ink-faint); margin-top:7px; line-height:1.45; }
+.chart{ max-width:700px; margin-inline:auto; }
+.legend{ display:flex; gap:18px; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px; }
+.legend i{ width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:6px; }
+svg{ display:block; width:100%; height:auto; }
+.g-line{ stroke:var(--rule-soft); stroke-width:1; }
+.g-base{ stroke:var(--rule); stroke-width:1; }
+.g-tick{ fill:var(--ink-faint); font-family:var(--mono); font-size:11px; }
+.g-lab{ fill:var(--ink-soft); font-family:var(--body); font-size:12px; }
+.g-val{ fill:var(--ink); font-family:var(--mono); font-size:12.5px; font-weight:500; }
+.g-sub{ fill:var(--ink-faint); font-family:var(--mono); font-size:10.5px; }
+.g-node{ fill:var(--surface-2); stroke:var(--rule); stroke-width:1; }
+.g-node--hi{ fill:var(--surface-2); stroke:var(--accent); stroke-width:1.5; }
+.g-ntext{ fill:var(--ink); font-family:var(--mono); font-size:12px; }
+.g-arrow{ stroke:var(--ink-faint); stroke-width:1.3; fill:none; }
+
+/* Notes */
+.notes{ display:none; margin-top:14px; border-top:1px dashed var(--rule); padding-top:12px;
+  font-size:13.5px; color:var(--ink-soft); }
+.notes b{ font-family:var(--mono); font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink-faint); display:block; margin-bottom:5px; }
+body.show-notes .notes{ display:block; }
+
+/* Chrome */
+.bar{ position:fixed; right:16px; bottom:16px; display:flex; gap:8px; align-items:center; z-index:10; }
+.bar button{ font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); background:var(--surface);
+  border:1px solid var(--rule); border-radius:4px; padding:6px 11px; cursor:pointer; }
+.bar button:hover{ color:var(--ink); border-color:var(--ink-faint); }
+.bar button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.counter{ font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); background:var(--surface);
+  border:1px solid var(--rule); border-radius:4px; padding:6px 11px; font-variant-numeric:tabular-nums; }
+
+@media (max-width:820px){
+  .slide{ aspect-ratio:auto; min-height:0; padding:28px 24px; }
+  .cols--2,.cols--3,.stat-row{ grid-template-columns:1fr; }
+}
+@media (prefers-reduced-motion:reduce){ *{ scroll-behavior:auto !important; } }
+html{ scroll-behavior:smooth; }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 1 -->
+<section class="slide title-slide" id="s1">
+  <div class="eyebrow">AI Engineer case study · Customer Journey Analytics</div>
+  <h1>Smart Inquiry Triage Assistant</h1>
+  <p class="lead">Every customer inquiry classified, prioritised, routed and answered in about a second, with a confidence score that says when to ask a human instead.</p>
+  <div class="pipeline-strip">
+    <b>classify</b><i>+</i><b>retrieve</b><i>→</i><b>fuse</b><i>→</i><b>priority</b><i>→</i><b>route</b><i>→</i><b>notes</b>
+  </div>
+  <div class="title-meta">
+    <div>PRESENTED BY<span>Swaraj Sonawane</span></div>
+    <div>STACK<span>LangGraph · Ollama · ChromaDB · Streamlit</span></div>
+    <div>RUNS<span>Fully local, no API key</span></div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Keep this short. Say who you are, say the system reads a customer message and decides what it is about, how urgent it is, and who should handle it. Then move on.</div>
+</section>
+
+<!-- 2 -->
+<section class="slide" id="s2">
+  <div class="eyebrow">01 · The problem</div>
+  <div class="slide__body">
+    <h2>Today a person reads every message first</h2>
+    <p class="lead">Inquiries arrive all day across the website, the app, the configurator and dealer systems. Before anyone can help, someone has to read each one and decide where it goes.</p>
+    <div class="cols cols--3" style="margin-top:26px">
+      <div class="point"><h3>It is slow</h3><p>The clock starts when the message arrives, not when a human finally opens it. That waiting time is invisible in most reporting.</p></div>
+      <div class="point"><h3>It is inconsistent</h3><p>Two people routing the same message send it to two different teams. The customer feels that as being passed around.</p></div>
+      <div class="point"><h3>It does not scale</h3><p>Volume grows with every new digital channel. Triage headcount does not grow with it.</p></div>
+    </div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>This is the business slide. Do not rush it. The point to land is that triage is pure overhead. Nobody's problem gets solved during triage, it only decides who solves it.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" id="s3">
+  <div class="eyebrow">02 · Why it matters here</div>
+  <div class="slide__body">
+    <h2>What automated triage actually buys</h2>
+    <div class="cols cols--2" style="margin-top:20px">
+      <div>
+        <div class="point" style="margin-bottom:20px"><h3>Response time</h3><p>Routing happens in about 1.3 seconds instead of waiting in an unread pile. The first human to touch the message is already the right human.</p></div>
+        <div class="point"><h3>Consistency</h3><p>The same inquiry gets the same category and the same queue every time, and the reasoning behind it is recorded.</p></div>
+      </div>
+      <div>
+        <div class="point" style="margin-bottom:20px"><h3>Customer experience</h3><p>A brake fault never sits behind a brochure request. Urgency is assessed on arrival, not on opening.</p></div>
+        <div class="point"><h3>A signal, not just a saving</h3><p>Once every inquiry is categorised, the category mix becomes live product feedback. A spike in configurator complaints is a bug report before it is a support cost.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>The last box is the one that is worth pausing on. It reframes the tool from a cost saving into something the analytics team can actually use. That is the team you would be joining.</div>
+</section>
+
+<!-- 4 -->
+<section class="slide" id="s4">
+  <div class="eyebrow">03 · What it produces</div>
+  <div class="slide__body">
+    <h2>One inquiry in, a full triage decision out</h2>
+    <div class="output" style="margin-top:14px">
+      <div><span class="k">query:</span> <span class="v">The brake warning light came on and the pedal feels soft. Is the car safe to drive?</span></div>
+      <div><span class="k">category:</span> <span class="v">service</span></div>
+      <div><span class="k">priority:</span> <span class="pill pill--high">high</span></div>
+      <div><span class="k">routed queue:</span> <span class="v">Service Scheduling Team</span></div>
+      <div><span class="k">confidence:</span> <span class="v">0.8548</span></div>
+      <div><span class="k">resolution notes:</span> <span class="v">Notify the assigned technician to inspect the brake system and advise</span></div>
+      <div><span class="k"></span> <span class="v">the customer on whether the car is safe to drive to the dealership.</span></div>
+      <div><span class="k">retrieved past cases:</span> <span class="v">CASE-0003 · CASE-0051 · CASE-0188 · CASE-0122 · CASE-0180</span></div>
+    </div>
+    <p style="margin-top:18px">The last line matters as much as the first. Every decision points back at the historical cases that produced it, so a reviewer can check the reasoning instead of trusting it.</p>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Read the output once, slowly. Then make the point about the retrieved cases. This is your first chance to show that you thought about the person who has to trust the output.</div>
+</section>
+
+<!-- 5 -->
+<section class="slide" id="s5">
+  <div class="eyebrow">04 · Architecture</div>
+  <div class="slide__body">
+    <h2>Six steps, two of them in parallel</h2>
+    <figure style="margin-top:18px">
+      <svg viewBox="0 0 940 190" role="img" aria-label="Pipeline diagram: start fans out to classify and retrieve in parallel, which join at fuse, then priority, route, notes and escalate.">
+        <rect class="g-node" x="8" y="72" width="62" height="34" rx="17"></rect>
+        <text class="g-ntext" x="39" y="93" text-anchor="middle">start</text>
+        <rect class="g-node--hi" x="102" y="18" width="120" height="42" rx="4"></rect>
+        <text class="g-ntext" x="162" y="44" text-anchor="middle">classify</text>
+        <rect class="g-node--hi" x="102" y="118" width="120" height="42" rx="4"></rect>
+        <text class="g-ntext" x="162" y="144" text-anchor="middle">retrieve</text>
+        <rect class="g-node" x="254" y="68" width="86" height="42" rx="4"></rect>
+        <text class="g-ntext" x="297" y="94" text-anchor="middle">fuse</text>
+        <rect class="g-node" x="372" y="68" width="104" height="42" rx="4"></rect>
+        <text class="g-ntext" x="424" y="94" text-anchor="middle">priority</text>
+        <rect class="g-node" x="508" y="68" width="86" height="42" rx="4"></rect>
+        <text class="g-ntext" x="551" y="94" text-anchor="middle">route</text>
+        <rect class="g-node" x="626" y="68" width="86" height="42" rx="4"></rect>
+        <text class="g-ntext" x="669" y="94" text-anchor="middle">notes</text>
+        <rect class="g-node" x="744" y="68" width="104" height="42" rx="4"></rect>
+        <text class="g-ntext" x="796" y="94" text-anchor="middle">escalate</text>
+        <rect class="g-node" x="880" y="72" width="52" height="34" rx="17"></rect>
+        <text class="g-ntext" x="906" y="93" text-anchor="middle">end</text>
+        <path class="g-arrow" d="M70,89 L86,89 L86,39 L98,39"></path>
+        <path class="g-arrow" d="M70,89 L86,89 L86,139 L98,139"></path>
+        <path class="g-arrow" d="M222,39 L238,39 L238,83 L250,83"></path>
+        <path class="g-arrow" d="M222,139 L238,139 L238,95 L250,95"></path>
+        <path class="g-arrow" d="M340,89 L368,89"></path>
+        <path class="g-arrow" d="M476,89 L504,89"></path>
+        <path class="g-arrow" d="M594,89 L622,89"></path>
+        <path class="g-arrow" d="M712,89 L740,89"></path>
+        <path class="g-arrow" d="M848,89 L876,89"></path>
+        <text class="g-sub" x="162" y="12" text-anchor="middle">taxonomy only</text>
+        <text class="g-sub" x="162" y="176" text-anchor="middle">300 past cases</text>
+      </svg>
+      <figcaption>Classification and retrieval fan out from the start and join at the fusion step. Everything after that is sequential.</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Walk left to right once. Say what each box does in a few words. Do not explain why it is a graph yet, that is the next slide and it lands harder on its own.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" id="s6">
+  <div class="eyebrow">05 · Key decision</div>
+  <div class="slide__body">
+    <h2>Why a graph and not a chain</h2>
+    <div class="cols cols--2" style="margin-top:18px">
+      <div>
+        <p class="lead">Classifying and retrieving do not depend on each other. Both only need the raw text of the inquiry.</p>
+        <p>Running them as parallel branches saves a round trip. That is the small reason.</p>
+      </div>
+      <div>
+        <div class="point"><h3>The real reason is independence</h3>
+        <p>The classifier never sees the retrieved cases. So when the two agree, that agreement is real evidence.</p>
+        <p style="margin-top:10px">If the classifier had been shown the neighbours first, it would tend to copy them, and their agreement would prove nothing. The whole confidence score is built on this.</p></div>
+      </div>
+    </div>
+    <p style="margin-top:20px"><strong>A chain cannot express this.</strong> A chain has one order, so one step always sees the output of the last. Independence is a property of the shape, and the shape is the graph.</p>
+  </div>
+  <div class="notes"><b>Speaker notes</b>This is the strongest technical point you have. Slow down. The sentence to say clearly is: if the classifier could see the past cases, it would just agree with them, and then agreement would tell me nothing.</div>
+</section>
+
+<!-- 7 -->
+<section class="slide" id="s7">
+  <div class="eyebrow">06 · Key decision</div>
+  <div class="slide__body">
+    <h2>Routing is a lookup, not a prediction</h2>
+    <p class="lead">In the historical data every category maps to exactly one queue, across all 300 rows. There is nothing here for a model to work out.</p>
+    <div class="stat-row" style="margin-top:22px">
+      <div class="stat"><div class="n">300 / 300</div><div class="l">rows where category determines queue</div></div>
+      <div class="stat"><div class="n">8</div><div class="l">categories, 8 queues, one to one</div></div>
+      <div class="stat"><div class="n">0 ms</div><div class="l">added latency, and no token cost</div></div>
+    </div>
+    <p style="margin-top:22px">So the routing table is built from the data at load time, and the loader raises an error if a category is ever seen mapping to two queues. A language model at this step could only introduce mistakes that a dictionary cannot make.</p>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Short slide, strong point. The line to land is: I did not use a model here because a model can only be wrong. Knowing where not to put the AI is part of the job.</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" id="s8">
+  <div class="eyebrow">07 · Key decision</div>
+  <div class="slide__body">
+    <h2>Priority comes from similar cases, not from the category</h2>
+    <div class="cols cols--2" style="margin-top:14px">
+      <div>
+        <p>The category cannot decide urgency, because every category spans several priority levels. A billing question can be routine, or a duplicate charge worth thousands.</p>
+        <p>So priority is a similarity weighted vote over the retrieved cases, which carry the urgency signal the label does not.</p>
+        <div class="point" style="margin-top:16px"><h3>The safety bias is deliberate</h3>
+        <p>A very similar high priority neighbour lifts the result one level. Over-triaging wastes a few minutes. Under-triaging leaves a brake fault in a slow queue. Those costs are not equal, so the rule is not symmetric.</p></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Category</th><th class="num">low</th><th class="num">med</th><th class="num">high</th></tr></thead>
+          <tbody>
+            <tr><td>service</td><td class="num">20</td><td class="num">18</td><td class="num">17</td></tr>
+            <tr><td>technical</td><td class="num">16</td><td class="num">17</td><td class="num">12</td></tr>
+            <tr><td>warranty</td><td class="num">13</td><td class="num">12</td><td class="num">10</td></tr>
+            <tr><td>ordering</td><td class="num">16</td><td class="num">17</td><td class="num">7</td></tr>
+            <tr><td>billing</td><td class="num">14</td><td class="num">18</td><td class="num">8</td></tr>
+            <tr><td>configurator</td><td class="num">22</td><td class="num">13</td><td class="num">0</td></tr>
+            <tr><td>general</td><td class="num">26</td><td class="num">4</td><td class="num">0</td></tr>
+            <tr><td>other</td><td class="num">19</td><td class="num">1</td><td class="num">0</td></tr>
+          </tbody>
+        </table>
+        <figcaption>Every operational category spans multiple priorities.</figcaption>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Point at the service row. Twenty low, eighteen medium, seventeen high. Say: if I set priority from the category, I would be guessing for every one of these.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" id="s9">
+  <div class="eyebrow">08 · Key decision</div>
+  <div class="slide__body">
+    <h2>Confidence is measured, not asked for</h2>
+    <div class="cols cols--2" style="margin-top:14px">
+      <div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Signal</th><th class="num">weight</th><th>What it catches</th></tr></thead>
+            <tbody>
+              <tr><td>Cross-check</td><td class="num">0.40</td><td>Do the two independent predictors agree?</td></tr>
+              <tr><td>Agreement</td><td class="num">0.35</td><td>How much retrieved weight backs the label?</td></tr>
+              <tr><td>Similarity</td><td class="num">0.25</td><td>Are the neighbours close at all?</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:14px">Each covers a failure the others miss. Similarity alone is high for a new inquiry that merely looks familiar. Agreement alone is high when retrieval is confidently wrong. The cross-check catches both but is only ever zero or one, so alone it cannot be thresholded.</p>
+      </div>
+      <div>
+        <div class="point"><h3>What I deliberately did not use</h3>
+        <p>Asking the model to rate its own confidence. A small model answers 0.9 to almost everything, because that number is generated text, not a measurement.</p>
+        <p style="margin-top:10px">Every signal here is computed from something observable instead.</p></div>
+        <div class="point" style="margin-top:18px"><h3>The honest trade-off</h3>
+        <p>These weights are reasoned, not fitted. With 300 labelled cases they could be learned. The next slide is the measurement that would drive it.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>The line worth saying out loud is that a small model will tell you it is ninety percent sure no matter what, so I did not ask it. Then admit the weights are hand set. Saying the weakness yourself is stronger than being asked.</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" id="s10">
+  <div class="eyebrow">09 · Results</div>
+  <div class="slide__body">
+    <h2>Does the confidence score actually work?</h2>
+    <p>If it does not track correctness it is decoration, because it decides what reaches a human. Measured by leave-one-out over 120 held-out cases.</p>
+    <figure class="chart" style="margin-top:4px">
+      <svg viewBox="0 0 620 300" role="img" aria-label="Bar chart of category accuracy by confidence band: 22 percent in the lowest band rising to 100 percent in the highest.">
+        <line class="g-line" x1="60" y1="40" x2="600" y2="40"></line>
+        <line class="g-line" x1="60" y1="90" x2="600" y2="90"></line>
+        <line class="g-line" x1="60" y1="140" x2="600" y2="140"></line>
+        <line class="g-line" x1="60" y1="190" x2="600" y2="190"></line>
+        <text class="g-tick" x="50" y="44" text-anchor="end">100%</text>
+        <text class="g-tick" x="50" y="94" text-anchor="end">75%</text>
+        <text class="g-tick" x="50" y="144" text-anchor="end">50%</text>
+        <text class="g-tick" x="50" y="194" text-anchor="end">25%</text>
+        <text class="g-tick" x="50" y="244" text-anchor="end">0%</text>
+        <path fill="var(--series-a)" d="M70,240 L70,199.6 Q70,195.6 74,195.6 L136,195.6 Q140,195.6 140,199.6 L140,240 Z"></path>
+        <path fill="var(--series-a)" d="M176,240 L176,84 Q176,80 180,80 L242,80 Q246,80 246,84 L246,240 Z"></path>
+        <rect x="282" y="212" width="70" height="28" rx="3" fill="none" stroke="var(--rule)" stroke-dasharray="3 3"></rect>
+        <path fill="var(--series-a)" d="M388,240 L388,52.4 Q388,48.4 392,48.4 L454,48.4 Q458,48.4 458,52.4 L458,240 Z"></path>
+        <path fill="var(--series-a)" d="M494,240 L494,44 Q494,40 498,40 L556,40 Q560,40 560,44 L560,240 Z"></path>
+        <text class="g-val" x="105" y="187" text-anchor="middle">22.2%</text>
+        <text class="g-val" x="211" y="72" text-anchor="middle">80.0%</text>
+        <text class="g-sub" x="317" y="230" text-anchor="middle">no cases</text>
+        <text class="g-val" x="423" y="40" text-anchor="middle">95.8%</text>
+        <text class="g-val" x="529" y="32" text-anchor="middle">100%</text>
+        <line class="g-base" x1="60" y1="240" x2="600" y2="240"></line>
+        <text class="g-lab" x="105" y="258" text-anchor="middle">0.0–0.2</text>
+        <text class="g-lab" x="211" y="258" text-anchor="middle">0.2–0.4</text>
+        <text class="g-lab" x="317" y="258" text-anchor="middle">0.4–0.6</text>
+        <text class="g-lab" x="423" y="258" text-anchor="middle">0.6–0.8</text>
+        <text class="g-lab" x="529" y="258" text-anchor="middle">0.8–1.0</text>
+        <text class="g-sub" x="105" y="274" text-anchor="middle">n=18</text>
+        <text class="g-sub" x="211" y="274" text-anchor="middle">n=5</text>
+        <text class="g-sub" x="317" y="274" text-anchor="middle">n=0</text>
+        <text class="g-sub" x="423" y="274" text-anchor="middle">n=48</text>
+        <text class="g-sub" x="529" y="274" text-anchor="middle">n=49</text>
+        <text class="g-lab" x="330" y="294" text-anchor="middle">confidence band</text>
+      </svg>
+      <figcaption>Category accuracy rises with confidence, from 22% in the lowest band to 100% in the highest. The empty middle band is the honest caveat: the cross-check signal is binary and carries the most weight, so scores cluster at the ends.</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><b>Speaker notes</b>This is the most important slide in the deck. The sentence is: when the system is confident it is right, and when it is unsure it really is more likely to be wrong. Then point at the gap in the middle and explain it yourself before anyone asks.</div>
+</section>
+
+<!-- 11 -->
+<section class="slide" id="s11">
+  <div class="eyebrow">10 · Results</div>
+  <div class="slide__body">
+    <h2>What that buys operationally</h2>
+    <p>Because confidence tracks correctness, the escalation threshold becomes a real dial between coverage and accuracy.</p>
+    <div class="legend" style="margin-top:10px">
+      <span><i style="background:var(--series-a)"></i>Handled automatically</span>
+      <span><i style="background:var(--series-b)"></i>Accuracy on those</span>
+    </div>
+    <figure class="chart">
+      <svg viewBox="0 0 620 300" role="img" aria-label="Grouped bar chart comparing share handled automatically against accuracy on those, at three escalation thresholds.">
+        <line class="g-line" x1="60" y1="40" x2="600" y2="40"></line>
+        <line class="g-line" x1="60" y1="90" x2="600" y2="90"></line>
+        <line class="g-line" x1="60" y1="140" x2="600" y2="140"></line>
+        <line class="g-line" x1="60" y1="190" x2="600" y2="190"></line>
+        <text class="g-tick" x="50" y="44" text-anchor="end">100%</text>
+        <text class="g-tick" x="50" y="94" text-anchor="end">75%</text>
+        <text class="g-tick" x="50" y="144" text-anchor="end">50%</text>
+        <text class="g-tick" x="50" y="194" text-anchor="end">25%</text>
+        <text class="g-tick" x="50" y="244" text-anchor="end">0%</text>
+        <path fill="var(--series-a)" d="M116,240 L116,44 Q116,40 120,40 L164,40 Q168,40 168,44 L168,240 Z"></path>
+        <path fill="var(--series-b)" d="M172,240 L172,72.4 Q172,68.4 176,68.4 L220,68.4 Q224,68.4 224,72.4 L224,240 Z"></path>
+        <path fill="var(--series-a)" d="M276,240 L276,82.4 Q276,78.4 280,78.4 L324,78.4 Q328,78.4 328,82.4 L328,240 Z"></path>
+        <path fill="var(--series-b)" d="M332,240 L332,48.2 Q332,44.2 336,44.2 L380,44.2 Q384,44.2 384,48.2 L384,240 Z"></path>
+        <path fill="var(--series-a)" d="M436,240 L436,162.4 Q436,158.4 440,158.4 L484,158.4 Q488,158.4 488,162.4 L488,240 Z"></path>
+        <path fill="var(--series-b)" d="M492,240 L492,44 Q492,40 496,40 L540,40 Q544,40 544,44 L544,240 Z"></path>
+        <text class="g-val" x="142" y="32" text-anchor="middle">100%</text>
+        <text class="g-val" x="198" y="60" text-anchor="middle">85.8%</text>
+        <text class="g-val" x="302" y="70" text-anchor="middle">80.8%</text>
+        <text class="g-val" x="358" y="36" text-anchor="middle">97.9%</text>
+        <text class="g-val" x="462" y="150" text-anchor="middle">40.8%</text>
+        <text class="g-val" x="518" y="32" text-anchor="middle">100%</text>
+        <line class="g-base" x1="60" y1="240" x2="600" y2="240"></line>
+        <text class="g-lab" x="170" y="258" text-anchor="middle">escalate nothing</text>
+        <text class="g-lab" x="330" y="258" text-anchor="middle">threshold 0.5</text>
+        <text class="g-lab" x="490" y="258" text-anchor="middle">threshold 0.8</text>
+        <text class="g-sub" x="330" y="274" text-anchor="middle">default</text>
+        <text class="g-lab" x="330" y="294" text-anchor="middle">escalation threshold</text>
+      </svg>
+      <figcaption>At the default threshold, sending the least confident fifth of inquiries to a person lifts accuracy on everything else from 85.8% to 97.9%.</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><b>Speaker notes</b>One sentence does this slide. Give up a fifth of the volume to a human, and what is left is right almost ninety eight times out of a hundred. That is the business case.</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" id="s12">
+  <div class="eyebrow">11 · Results</div>
+  <div class="slide__body">
+    <h2>Top-K was chosen by measuring, not by feel</h2>
+    <p>Top-K is configurable, so the default should be defensible. Swept against ground truth over all 300 cases.</p>
+    <div class="cols cols--2" style="margin-top:16px">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="num">Top-K</th><th class="num">Category acc.</th><th class="num">Priority acc.</th><th class="num">Under-triage</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="num">77.7%</td><td class="num">52.7%</td><td class="num">17.3%</td></tr>
+            <tr><td class="num">3</td><td class="num">80.7%</td><td class="num">54.3%</td><td class="num">16.7%</td></tr>
+            <tr class="is-key"><td class="num">5</td><td class="num">83.7%</td><td class="num">61.0%</td><td class="num">15.0%</td></tr>
+            <tr><td class="num">7</td><td class="num">83.3%</td><td class="num">61.3%</td><td class="num">13.7%</td></tr>
+            <tr><td class="num">10</td><td class="num">85.0%</td><td class="num">61.3%</td><td class="num">14.0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="point"><h3>Five is the knee</h3><p>Accuracy climbs steeply to five and then flattens, while every extra neighbour adds latency and dilutes the vote. Going from three to five buys seven points of priority accuracy. Going from five to ten buys almost nothing.</p></div>
+        <div class="point" style="margin-top:18px"><h3>A bug this caught</h3><p>The safety bias threshold was originally 0.75. Measurement showed that sits below the lowest real similarity in the data, so it fired on half of all cases when only 18% are genuinely high priority. It is now set from the measured distribution.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Mention the bug on purpose. It shows the evaluation harness earned its place by catching something you had got wrong, rather than just producing numbers that flatter you.</div>
+</section>
+
+<!-- 13 -->
+<section class="slide" id="s13">
+  <div class="eyebrow">12 · Demo</div>
+  <div class="slide__body">
+    <h2>Live demo</h2>
+    <p class="lead">Three inquiries, chosen to show a different behaviour each time.</p>
+    <div class="cols cols--3" style="margin-top:24px">
+      <div class="point"><h3>1 · The clear case</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"The brake warning light came on and the pedal feels soft."</p><p style="margin-top:8px">High priority, service queue, confidence above 0.85. Open the panel and show the five neighbours it reasoned from.</p></div>
+      <div class="point"><h3>2 · The ambiguous case</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"I was charged twice for my deposit last month."</p><p style="margin-top:8px">Sits on the billing and ordering boundary. Confidence drops because the neighbours are split.</p></div>
+      <div class="point"><h3>3 · The one it should refuse</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"What is the weather like in Munich today?"</p><p style="margin-top:8px">Confidence collapses to 0.19 and it escalates instead of guessing. Knowing when to stop is the feature.</p></div>
+    </div>
+    <p style="margin-top:22px">Then drag the Top-K slider and re-run the second one, to show the retrieval actually changing the answer.</p>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Have the app already running and warm before you start talking. Do not install anything live. If the demo fails, keep going and describe what it would have shown, then move on quickly.</div>
+</section>
+
+<!-- 14 -->
+<section class="slide" id="s14">
+  <div class="eyebrow">13 · Limitations</div>
+  <div class="slide__body">
+    <h2>What does not work yet</h2>
+    <div class="cols cols--2" style="margin-top:16px">
+      <div>
+        <div class="point" style="margin-bottom:18px"><h3>Priority is the weak step</h3><p>63% exact agreement. It reaches 97.5% within one level, but exact urgency is genuinely contested. Two human labellers would disagree on many of these too.</p></div>
+        <div class="point"><h3>The knowledge base is small</h3><p>300 cases. The <span style="font-family:var(--mono)">other</span> category has only 20, and it is the worst performing at 62.5%.</p></div>
+      </div>
+      <div>
+        <div class="point" style="margin-bottom:18px"><h3>Notes are unevaluated</h3><p>There is no ground truth for a generated note, so they are read for plausibility only. I am not claiming quality I did not measure.</p></div>
+        <div class="point"><h3>Not production shaped</h3><p>English only, single tenant, no authentication or rate limiting, and the weights are hand set rather than learned.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Do not apologise through this slide. Say the numbers plainly. Being specific about what you did not measure is what makes the numbers you did measure believable.</div>
+</section>
+
+<!-- 15 -->
+<section class="slide" id="s15">
+  <div class="eyebrow">14 · Roadmap</div>
+  <div class="slide__body">
+    <h2>Where this goes next</h2>
+    <div class="cols cols--2" style="margin-top:16px">
+      <div>
+        <div class="point" style="margin-bottom:18px"><h3>Close the feedback loop</h3><p>Every correction an agent makes becomes a new labelled case. The system improves without retraining anything. That is the main advantage of retrieval over a fine-tuned classifier, and it is the first thing I would build.</p></div>
+        <div class="point"><h3>Learn the weights</h3><p>Fit the confidence weights on held-out data and pick the threshold from the operating curve instead of the default.</p></div>
+      </div>
+      <div>
+        <div class="point" style="margin-bottom:18px"><h3>Multilingual</h3><p>Immediately necessary for a European customer base. The embedding model is the piece that changes.</p></div>
+        <div class="point"><h3>Monitoring as a product signal</h3><p>Track escalation rate and category drift. A sudden rise in one category is a product problem surfacing before it becomes a support cost.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Lead with the feedback loop. It is the one that shows you understand why the design is retrieval based rather than a trained classifier.</div>
+</section>
+
+<!-- 16 -->
+<section class="slide" id="s16">
+  <div class="eyebrow">15 · Summary</div>
+  <div class="slide__body">
+    <h2>In one slide</h2>
+    <div class="stat-row" style="margin-top:18px">
+      <div class="stat"><div class="n">85.8%</div><div class="l">category accuracy, 120 held-out cases</div></div>
+      <div class="stat"><div class="n">97.9%</div><div class="l">accuracy on the 81% handled automatically</div></div>
+      <div class="stat"><div class="n">~1.3 s</div><div class="l">per inquiry, fully local</div></div>
+    </div>
+    <div class="cols cols--3" style="margin-top:28px">
+      <div class="point"><h3>Built as a graph on purpose</h3><p>So classification and retrieval stay independent, which is what makes the confidence score mean something.</p></div>
+      <div class="point"><h3>Measured, not asserted</h3><p>Every constant in the config was set from an evaluation run, and one of them was wrong until that run caught it.</p></div>
+      <div class="point"><h3>Knows when to stop</h3><p>The system escalates rather than guessing, and shows the cases behind every decision.</p></div>
+    </div>
+    <p style="margin-top:26px;font-family:var(--mono);font-size:13px;color:var(--ink-faint)">Questions welcome.</p>
+  </div>
+  <div class="notes"><b>Speaker notes</b>Land on the three numbers, then stop talking. Do not add a new idea on the last slide. Leave room for questions, they are half the assessment.</div>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="notesBtn" type="button" aria-pressed="false">Notes</button>
+  <span class="counter"><span id="cur">1</span> / 16</span>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var cur = document.getElementById('cur');
+  var btn = document.getElementById('notesBtn');
+
+  btn.addEventListener('click', function(){
+    var on = document.body.classList.toggle('show-notes');
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        cur.textContent = String(slides.indexOf(e.target) + 1);
+      }
+    });
+  }, { threshold: 0.5 });
+  slides.forEach(function(s){ io.observe(s); });
+
+  function go(delta){
+    var i = parseInt(cur.textContent, 10) - 1 + delta;
+    if(i < 0 || i >= slides.length) return;
+    slides[i].scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.target.tagName === 'BUTTON' && e.key === ' ') return;
+    if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){ e.preventDefault(); go(1); }
+    if(e.key === 'ArrowLeft'  || e.key === 'PageUp'){ e.preventDefault(); go(-1); }
+    if(e.key === 'n' || e.key === 'N'){ btn.click(); }
+  });
+})();
+</script>
+</body>
+</html>
