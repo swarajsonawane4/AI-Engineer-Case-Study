@@ -1,0 +1,14 @@
+# Virtual environment
+.venv/
+venv/
+
+# Vector store (rebuilt with `python -m src.main --ingest`)
+.chroma/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# macOS
+.DS_Store
