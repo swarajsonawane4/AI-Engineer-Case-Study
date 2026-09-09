@@ -191,8 +191,12 @@ def fuse(state: TriageState) -> dict[str, Any]:
     knn_category, agreement = _weighted_category_vote(neighbours)
 
     # Prefer the classifier: it reads the taxonomy definitions, while
-    # retrieval only knows what past inquiries looked like. On disagreement
-    # the cross-check term collapses, which is what drives escalation.
+    # retrieval only knows what past inquiries looked like. Measured over all
+    # 300 cases that is narrowly the better call, 85.0% against 83.7%, but the
+    # margin is small enough that accuracy is not the real reason. The reason
+    # is independence: without two separate predictors there is no cross-check,
+    # no confidence score and no escalation. On disagreement the cross-check
+    # term collapses, which is what drives escalation.
     category = llm_category or knn_category
     agreed = bool(llm_category and knn_category and llm_category == knn_category)
 

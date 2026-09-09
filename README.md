@@ -42,7 +42,7 @@ python -m src.main "My brakes are grinding and the pedal feels soft."
 And reproduce the evaluation numbers below:
 
 ```bash
-python -m src.evaluate --sample 120 --top-k 5   # full pipeline, ~30 s
+python -m src.evaluate --sample 300 --top-k 5   # full pipeline, ~75 s
 python -m src.sweep                             # retrieval only, ~5 s
 ```
 
@@ -107,6 +107,24 @@ first, it would tend to copy them, and the agreement would be circular and
 worth nothing. This independence is what makes the confidence score meaningful,
 and it is only expressible as a graph.
 
+Worth being precise about what each half contributes. Measured over all 300
+cases on identical footing:
+
+| Predictor | Category accuracy |
+|---|---|
+| Classifier alone | 85.0% |
+| Neighbour vote alone | 83.7% |
+| Combined, as shipped | 85.0% |
+
+`fuse` prefers the classifier, and that is narrowly the better choice, but only
+by 1.3 points. The combined figure equals the classifier alone because the
+neighbour vote is a fallback that fires only when parsing fails, which is rare.
+
+So the chat model is not earning its place on accuracy. It is earning it by
+being a second, independent opinion, which is the only way to get a confidence
+signal at all. Knowing when the system is unsure is worth far more than the
+point or so of accuracy either predictor gains over the other.
+
 ---
 
 ## Key design decisions
@@ -148,8 +166,12 @@ at or above 0.858, the predicted priority is raised by one level.
 
 The reason is that the two errors do not cost the same. Over-triaging a routine
 question wastes a few minutes of an agent's time. Under-triaging a brake fault
-leaves a safety issue sitting in a low-priority queue. The bias trades some
-overall accuracy for a lower under-triage rate, on purpose.
+leaves a safety issue sitting in a low-priority queue.
+
+Measured over all 300 cases, the rule cuts under-triage from 17.3% to 15.0%
+and raises over-triage from 22.0% to 24.0%, while exact accuracy is unchanged
+at about 61%. So it does not trade accuracy for safety. It converts errors from
+the expensive direction into the cheap one.
 
 An earlier version used a threshold of 0.75. Measurement showed that was wrong:
 0.75 sits below the *minimum* in-domain similarity of 0.775, so the rule fired
@@ -206,19 +228,20 @@ measurement that would drive that.
 
 ## Results
 
-Measured by leave-one-out evaluation. Each case is triaged with itself excluded
-from retrieval, so it cannot look up its own answer, and its human-assigned
-labels are the ground truth. Reproduce with `python -m src.evaluate`.
+Measured by leave-one-out evaluation over all 300 cases. Each case is triaged
+with itself excluded from retrieval, so it cannot look up its own answer, and
+its human-assigned labels are the ground truth. Reproduce with
+`python -m src.evaluate --sample 300`.
 
-### Headline numbers (120 cases, Top-K = 5)
+### Headline numbers (all 300 cases, Top-K = 5)
 
 | Metric | Result |
 |---|---|
-| Category accuracy | **85.8%** |
-| Queue accuracy | 85.8% (follows from category by construction) |
-| Priority, exact match | 63.3% |
-| Priority, within one level | **97.5%** |
-| Under-triage rate | 17.5% |
+| Category accuracy | **85.0%** |
+| Queue accuracy | 85.0% (follows from category by construction) |
+| Priority, exact match | 61.0% |
+| Priority, within one level | **95.7%** |
+| Under-triage rate | 15.0% |
 | Latency per inquiry | about 1.3 s |
 
 ### Does the confidence score actually work?
@@ -228,13 +251,13 @@ escalated. If it does not track correctness, it is decoration. It does:
 
 | Confidence band | Cases | Category accuracy |
 |---|---|---|
-| 0.0 - 0.2 | 18 | 22.2% |
-| 0.2 - 0.4 | 5 | 80.0% |
-| 0.6 - 0.8 | 48 | 95.8% |
-| 0.8 - 1.0 | 49 | 100.0% |
+| 0.0 - 0.2 | 41 | 29.3% |
+| 0.2 - 0.4 | 27 | 77.8% |
+| 0.6 - 0.8 | 112 | 92.9% |
+| 0.8 - 1.0 | 120 | 98.3% |
 
-Accuracy rises monotonically with confidence, from 22% in the lowest band to
-100% in the highest. The pipeline knows when it does not know.
+Accuracy rises monotonically with confidence, from 29% in the lowest band to
+98% in the highest. The pipeline knows when it does not know.
 
 ### The operating trade-off
 
@@ -242,14 +265,14 @@ That is what makes the escalation threshold useful in practice:
 
 | Threshold | Handled automatically | Accuracy on those |
 |---|---|---|
-| 0.0 (escalate nothing) | 100% | 85.8% |
-| **0.5 (default)** | **80.8%** | **97.9%** |
-| 0.8 | 40.8% | 100.0% |
+| 0.0 (escalate nothing) | 100% | 85.0% |
+| **0.5 (default)** | **77.3%** | **95.7%** |
+| 0.8 | 40.0% | 98.3% |
 
-At the default threshold, sending the least confident 19% of inquiries to a
-human lifts accuracy on everything else from 86% to 98%. That is the business
+At the default threshold, sending the least confident 23% of inquiries to a
+human lifts accuracy on everything else from 85% to 96%. That is the business
 case in one line: most of the volume is handled automatically and reliably,
-and the hard fifth still reaches a person.
+and the hard quarter still reaches a person.
 
 One honest caveat. The table is flat between 0.3 and 0.6 because the
 cross-check signal is binary and carries the largest weight, so scores cluster
@@ -260,20 +283,21 @@ behaves identically. Fitting the weights would smooth this out.
 
 | Category | Cases | Accuracy |
 |---|---|---|
-| technical | 18 | 100.0% |
-| general | 12 | 91.7% |
-| ordering | 16 | 87.5% |
-| service | 22 | 86.4% |
-| configurator | 14 | 85.7% |
-| warranty | 14 | 85.7% |
-| billing | 16 | 75.0% |
-| other | 8 | 62.5% |
+| technical | 45 | 100.0% |
+| ordering | 40 | 92.5% |
+| warranty | 35 | 91.4% |
+| configurator | 35 | 88.6% |
+| general | 30 | 83.3% |
+| service | 55 | 80.0% |
+| billing | 40 | 75.0% |
+| other | 20 | 55.0% |
 
-The two weakest categories are the two that overlap most with their
-neighbours. `billing` and `ordering` both involve money changing hands, and
-the boundary between a deposit question and a payment question is genuinely
-thin. `other` is a catch-all with only 20 examples in the whole dataset, so
-retrieval has little to work with.
+The two weakest are `other` at 55% and `billing` at 75%. `other` is a
+catch-all with only 20 examples in the whole dataset, so retrieval has little
+to work with, and by definition its members have nothing in common. `billing`
+overlaps with `ordering` and `warranty` wherever money changes hands, and the
+boundary between a deposit question, a payment question and a coverage dispute
+is genuinely thin.
 
 ### Choosing Top-K
 
@@ -284,7 +308,7 @@ read off.
 
 Note that this sweep isolates the **retrieval component**: the category column
 is the accuracy of the neighbour vote on its own, with no LLM involved, which
-is why it reads lower than the 85.8% headline for the full pipeline. Isolating
+is why it reads lower than the 85.0% headline for the full pipeline. Isolating
 it is the point, since Top-K only affects retrieval.
 
 | Top-K | Category acc. (kNN only) | Priority accuracy | Under-triage rate |
@@ -311,10 +335,10 @@ laptop with no network call.
 **Limitations.**
 
 - Priority is the weakest step. It is genuinely ambiguous, and even human
-  labellers would disagree on many of these cases. 97.5% of predictions land
-  within one level of the truth, but exact agreement is only 63.3%.
+  labellers would disagree on many of these cases. 95.7% of predictions land
+  within one level of the truth, but exact agreement is only 61.0%.
 - The knowledge base is 300 cases. Rare categories such as `other` have only
-  20 examples, so retrieval for them is thin.
+  20 examples, so retrieval for them is thin, and `other` scores worst at 55%.
 - The confidence weights are reasoned, not fitted.
 - Resolution notes are not evaluated, because there is no ground truth to
   score them against. They are read for plausibility only.
