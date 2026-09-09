@@ -42,7 +42,8 @@ python -m src.main "My brakes are grinding and the pedal feels soft."
 And reproduce the evaluation numbers below:
 
 ```bash
-python -m src.evaluate --sample 120 --top-k 5
+python -m src.evaluate --sample 120 --top-k 5   # full pipeline, ~30 s
+python -m src.sweep                             # retrieval only, ~5 s
 ```
 
 ---
@@ -151,9 +152,9 @@ leaves a safety issue sitting in a low-priority queue. The bias trades some
 overall accuracy for a lower under-triage rate, on purpose.
 
 An earlier version used a threshold of 0.75. Measurement showed that was wrong:
-0.75 sits below the *minimum* in-domain similarity of 0.766, so the rule fired
-on 49% of real cases against a true high-priority rate of 18%. Raising the
-threshold to the measured 75th percentile fixed it.
+0.75 sits below the *minimum* in-domain similarity of 0.775, so the rule fired
+on 61% of real cases against a true high-priority rate of 18%. Raising the
+threshold to the measured 75th percentile fixed it; the rule now fires on 9%.
 
 ### Similarity is rescaled before it is used as confidence
 
@@ -277,7 +278,9 @@ retrieval has little to work with.
 ### Choosing Top-K
 
 Top-K is configurable in the sidebar. The default of 5 was chosen by sweeping
-it against ground truth over all 300 cases.
+it against ground truth over all 300 cases. Reproduce with `python -m src.sweep`,
+which also prints the similarity distribution the constants in `config.py` were
+read off.
 
 Note that this sweep isolates the **retrieval component**: the category column
 is the accuracy of the neighbour vote on its own, with no LLM involved, which
@@ -308,8 +311,8 @@ laptop with no network call.
 **Limitations.**
 
 - Priority is the weakest step. It is genuinely ambiguous, and even human
-  labellers would disagree on many of these cases. Roughly 93% of predictions
-  land within one level of the truth, but exact agreement is much lower.
+  labellers would disagree on many of these cases. 97.5% of predictions land
+  within one level of the truth, but exact agreement is only 63.3%.
 - The knowledge base is 300 cases. Rare categories such as `other` have only
   20 examples, so retrieval for them is thin.
 - The confidence weights are reasoned, not fitted.
@@ -358,5 +361,6 @@ src/nodes.py           The individual pipeline steps
 src/graph.py           LangGraph wiring
 src/main.py            triage_inquiry() entry point and CLI
 src/evaluate.py        Leave-one-out evaluation harness
+src/sweep.py           Top-K and similarity sweeps behind the config constants
 data/                  Provided past cases and taxonomy
 ```

@@ -223,10 +223,10 @@ html{ scroll-behavior:smooth; }
       <div><span class="k">category:</span> <span class="v">service</span></div>
       <div><span class="k">priority:</span> <span class="pill pill--high">high</span></div>
       <div><span class="k">routed queue:</span> <span class="v">Service Scheduling Team</span></div>
-      <div><span class="k">confidence:</span> <span class="v">0.8548</span></div>
-      <div><span class="k">resolution notes:</span> <span class="v">Notify the assigned technician to inspect the brake system and advise</span></div>
-      <div><span class="k"></span> <span class="v">the customer on whether the car is safe to drive to the dealership.</span></div>
-      <div><span class="k">retrieved past cases:</span> <span class="v">CASE-0003 · CASE-0051 · CASE-0188 · CASE-0122 · CASE-0180</span></div>
+      <div><span class="k">confidence:</span> <span class="v">0.8628</span></div>
+      <div><span class="k">resolution notes:</span> <span class="v">Schedule an immediate appointment for the vehicle to inspect the brake</span></div>
+      <div><span class="k"></span> <span class="v">system and pedal feel. The agent should also review the maintenance history.</span></div>
+      <div><span class="k">retrieved past cases:</span> <span class="v">CASE-0003 · CASE-0051 · CASE-0188 · CASE-0262 · CASE-0180</span></div>
     </div>
     <p style="margin-top:18px">The last line matters as much as the first. Every decision points back at the historical cases that produced it, so a reviewer can check the reasoning instead of trusting it.</p>
   </div>
@@ -490,7 +490,7 @@ html{ scroll-behavior:smooth; }
       </div>
       <div>
         <div class="point"><h3>Five is the knee</h3><p>Accuracy climbs steeply to five and then flattens, while every extra neighbour adds latency and dilutes the vote. Going from three to five buys seven points of priority accuracy. Going from five to ten buys almost nothing.</p></div>
-        <div class="point" style="margin-top:18px"><h3>A bug this caught</h3><p>The safety bias threshold was originally 0.75. Measurement showed that sits below the lowest real similarity in the data, so it fired on half of all cases when only 18% are genuinely high priority. It is now set from the measured distribution.</p></div>
+        <div class="point" style="margin-top:18px"><h3>A bug this caught</h3><p>The safety bias threshold was originally 0.75. Measurement showed that sits below the lowest real similarity in the data, so it fired on 61% of all cases when only 18% are genuinely high priority. It is now set from the measured distribution, and fires on 9%.</p></div>
       </div>
     </div>
   </div>
@@ -504,13 +504,13 @@ html{ scroll-behavior:smooth; }
     <h2>Live demo</h2>
     <p class="lead">Three inquiries, chosen to show a different behaviour each time.</p>
     <div class="cols cols--3" style="margin-top:24px">
-      <div class="point"><h3>1 · The clear case</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"The brake warning light came on and the pedal feels soft."</p><p style="margin-top:8px">High priority, service queue, confidence above 0.85. Open the panel and show the five neighbours it reasoned from.</p></div>
-      <div class="point"><h3>2 · The ambiguous case</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"I was charged twice for my deposit last month."</p><p style="margin-top:8px">Sits on the billing and ordering boundary. Confidence drops because the neighbours are split.</p></div>
-      <div class="point"><h3>3 · The one it should refuse</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"What is the weather like in Munich today?"</p><p style="margin-top:8px">Confidence collapses to 0.19 and it escalates instead of guessing. Knowing when to stop is the feature.</p></div>
+      <div class="point"><h3>1 · The clear case</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"The brake warning light came on and the pedal feels soft. Is the car safe to drive?"</p><p style="margin-top:8px">High priority, service queue, confidence 0.86. Open the panel and show the five neighbours it reasoned from.</p></div>
+      <div class="point"><h3>2 · The predictors disagree</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"The dealer charged me a diagnostic fee but said it was covered."</p><p style="margin-top:8px">The classifier reads it as billing, all five retrieved cases are service or warranty. The cross-check falls to zero, confidence lands at 0.19 and it escalates.</p></div>
+      <div class="point"><h3>3 · Nothing close at all</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"What is a good recipe for banana bread with walnuts?"</p><p style="margin-top:8px">No neighbour is genuinely similar, so confidence collapses to 0.14 and it escalates instead of guessing.</p></div>
     </div>
-    <p style="margin-top:22px">Then drag the Top-K slider and re-run the second one, to show the retrieval actually changing the answer.</p>
+    <p style="margin-top:22px">Then run <span style="font-family:var(--mono);font-size:12.5px">"My extended warranty payment failed this month."</span> and drag the Top-K slider. At K=1 it is confident at 0.96. At K=10 the vote is diluted by off-category neighbours, confidence falls to 0.27 and the same inquiry escalates. That is the knee on the previous slide, live.</p>
   </div>
-  <div class="notes"><b>Speaker notes</b>Have the app already running and warm before you start talking. Do not install anything live. If the demo fails, keep going and describe what it would have shown, then move on quickly.</div>
+  <div class="notes"><b>Speaker notes</b>Have the app already running and warm before you start talking. Do not install anything live. The point of cases two and three is that they escalate for different reasons: in the second the two predictors disagree, in the third nothing in the knowledge base is close. Say that out loud, it is the clearest evidence the confidence score is made of separate signals. If the demo fails, keep going and describe what it would have shown, then move on quickly.</div>
 </section>
 
 <!-- 14 -->

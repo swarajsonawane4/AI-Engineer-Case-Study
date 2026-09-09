@@ -51,8 +51,9 @@ W_SIMILARITY = 0.25   # how close are the neighbours at all?
 #
 # 0.858 is the 75th percentile of in-domain top-1 similarity, measured by
 # leave-one-out retrieval over all 300 past cases. An earlier value of 0.75
-# sat below the *minimum* in-domain similarity (0.766), so it fired on 49% of
-# cases against a true high-priority rate of 18%. See README for the sweep.
+# sat below the *minimum* in-domain similarity (0.775), so it fired on 61% of
+# cases against a true high-priority rate of 18%. At 0.858 it fires on 9%.
+# See README for the sweep.
 SAFETY_BIAS_SIMILARITY = 0.858
 
 # --- Similarity normalisation -------------------------------------------
