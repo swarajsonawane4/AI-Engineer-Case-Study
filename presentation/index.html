@@ -61,7 +61,7 @@ body{
   color:var(--ink-faint); display:flex; align-items:center; gap:10px; margin-bottom:14px;
 }
 .eyebrow::after{ content:""; flex:1; height:1px; background:var(--rule-soft); }
-h1{ font-family:var(--display); font-size:clamp(30px,4.2vw,46px); font-weight:700; line-height:1.05;
+h1{ font-family:var(--display); font-size:4.7cqw; font-weight:700; line-height:1.05;
     letter-spacing:-.02em; margin:0 0 14px; text-wrap:balance; }
 h2{ font-family:var(--display); font-size:clamp(20px,2.4vw,27px); font-weight:600; line-height:1.15;
     letter-spacing:-.01em; margin:0 0 13px; text-wrap:balance; }
@@ -180,13 +180,22 @@ body.show-notes .notes{ display:block; }
 .slide .point p{ font-size:1.62cqw; }
 .slide th{ font-size:1.12cqw; }
 .slide td{ font-size:1.5cqw; }
-.slide .output{ font-size:1.45cqw; }
+.slide .output{ font-size:1.62cqw; }
 .slide .stat .n{ font-size:3.6cqw; }
 .slide .stat .l{ font-size:1.45cqw; }
-.slide figcaption{ font-size:1.32cqw; }
+.slide figcaption{ font-size:1.4cqw; }
 .slide .legend{ font-size:1.4cqw; }
 .slide .pill{ font-size:1.2cqw; }
 .chart{ max-width:66cqw; }
+/* These were left in fixed pixels by the first scaling pass, so they stayed
+   small while everything around them grew. */
+.slide .title-meta{ font-size:1.25cqw; }
+.slide .title-meta span{ font-size:1.7cqw; }
+.slide .title-meta span.repo{ font-size:1.45cqw; }
+.slide .pipeline-strip{ font-size:1.35cqw; }
+.slide .closing .ask{ font-size:1.45cqw; }
+.slide .closing .repo-pill{ font-size:1.4cqw; }
+.slide .demo-q{ font-size:1.4cqw; font-family:var(--mono); color:var(--ink); }
 /* A chart beside the numbers behind it. The chart carries the shape, the
    table carries the denominators, which is what makes the shape credible. */
 .evidence{ display:grid; grid-template-columns:1.5fr 1fr; gap:2.2cqw;
@@ -627,9 +636,9 @@ body.presenting .bar:hover{ opacity:1; }
     <h2>Live demo</h2>
     <p class="lead">Three inquiries, chosen to show a different behaviour each time.</p>
     <div class="cols cols--3" style="margin-top:24px">
-      <div class="point"><h3>1 · The clear case</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"The brake warning light came on and the pedal feels soft. Is the car safe to drive?"</p><p style="margin-top:8px">High priority, service queue, confidence 0.86. Open the panel and show the five neighbours it reasoned from.</p></div>
-      <div class="point"><h3>2 · The predictors disagree</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"The dealer charged me a diagnostic fee but said it was covered."</p><p style="margin-top:8px">The classifier reads it as billing, all five retrieved cases are service or warranty. The cross-check falls to zero, confidence lands at 0.19 and it escalates.</p></div>
-      <div class="point"><h3>3 · Nothing close at all</h3><p style="font-family:var(--mono);font-size:12.5px;color:var(--ink)">"What is a good recipe for banana bread with walnuts?"</p><p style="margin-top:8px">No neighbour is genuinely similar, so confidence collapses to 0.14 and it escalates instead of guessing.</p></div>
+      <div class="point"><h3>1 · The clear case</h3><p class="demo-q">"The brake warning light came on and the pedal feels soft. Is the car safe to drive?"</p><p style="margin-top:8px">High priority, service queue, confidence 0.86. Open the panel and show the five neighbours it reasoned from.</p></div>
+      <div class="point"><h3>2 · The predictors disagree</h3><p class="demo-q">"The dealer charged me a diagnostic fee but said it was covered."</p><p style="margin-top:8px">The classifier reads it as billing, all five retrieved cases are service or warranty. The cross-check falls to zero, confidence lands at 0.19 and it escalates.</p></div>
+      <div class="point"><h3>3 · Nothing close at all</h3><p class="demo-q">"What is a good recipe for banana bread with walnuts?"</p><p style="margin-top:8px">No neighbour is genuinely similar, so confidence collapses to 0.14 and it escalates instead of guessing.</p></div>
     </div>
   </div>
   <div class="notes"><b>Speaker notes</b>Have the app already running and warm before you start talking. Do not install anything live. The point of cases two and three is that they escalate for different reasons: in the second the two predictors disagree, in the third nothing in the knowledge base is close. Say that out loud, it is the clearest evidence the confidence score is made of separate signals. If the demo fails, keep going and describe what it would have shown, then move on quickly.</div>
