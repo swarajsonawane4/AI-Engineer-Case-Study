@@ -673,29 +673,29 @@ body.presenting .bar:hover{ opacity:1; }
     }, 60);
   }
 
+  // Present layout and browser fullscreen are deliberately separate.
+  // On a dual-monitor setup, macOS fullscreen puts the window in its own
+  // Space, which makes switching to the demo app an awkward animation. P
+  // gives you full-height slides while leaving the window where it is.
   function togglePresent(){
-    var on = !document.body.classList.contains('presenting');
-    syncPresent(on);
+    syncPresent(!document.body.classList.contains('presenting'));
+  }
+
+  function toggleFullscreen(){
     var el = document.documentElement;
-    if(on && el.requestFullscreen){ el.requestFullscreen().catch(function(){}); }
-    if(!on && document.fullscreenElement && document.exitFullscreen){
+    if(!document.fullscreenElement){
+      if(el.requestFullscreen){ el.requestFullscreen().catch(function(){}); }
+    } else if(document.exitFullscreen){
       document.exitFullscreen().catch(function(){});
     }
   }
 
   presentBtn.addEventListener('click', togglePresent);
-  // Leaving fullscreen by any route (Esc, the system chrome) exits present mode.
-  document.addEventListener('fullscreenchange', function(){
-    if(!document.fullscreenElement && document.body.classList.contains('presenting')){
-      syncPresent(false);
-    }
-  });
 
   document.addEventListener('keydown', function(e){
     if(e.target.tagName === 'BUTTON' && e.key === ' ') return;
-    if(e.key === 'p' || e.key === 'P' || e.key === 'f' || e.key === 'F'){
-      e.preventDefault(); togglePresent(); return;
-    }
+    if(e.key === 'p' || e.key === 'P'){ e.preventDefault(); togglePresent(); return; }
+    if(e.key === 'f' || e.key === 'F'){ e.preventDefault(); toggleFullscreen(); return; }
     if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){ e.preventDefault(); go(1); }
     if(e.key === 'ArrowLeft'  || e.key === 'PageUp'){ e.preventDefault(); go(-1); }
     if(e.key === 'n' || e.key === 'N'){ btn.click(); }
