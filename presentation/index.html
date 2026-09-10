@@ -158,6 +158,62 @@ body.show-notes .notes{ display:block; }
 }
 @media (prefers-reduced-motion:reduce){ *{ scroll-behavior:auto !important; } }
 html{ scroll-behavior:smooth; }
+
+/* --- Fullscreen present mode (press P, or the Present button) --- */
+html.presenting-html{ scroll-snap-type:y mandatory; background:var(--ground); }
+body.presenting .deck{ padding:0; gap:0; }
+body.presenting .slide{
+  width:100vw; max-width:none; height:100vh; aspect-ratio:auto; min-height:0;
+  border:none; border-radius:0; box-shadow:none; scroll-snap-align:start;
+  scroll-margin-top:0; justify-content:center;
+  padding:clamp(30px,5vh,70px) clamp(40px,7vw,130px);
+}
+body.presenting .slide__body{ flex:0 1 auto; overflow:visible; }
+body.presenting .bar{ opacity:.2; transition:opacity .2s; }
+body.presenting .bar:hover{ opacity:1; }
+@media (prefers-reduced-motion:reduce){ body.presenting .bar{ transition:none; } }
+
+/* --- Print / PDF: one slide per landscape page --- */
+@page{ size:13.333in 7.5in; margin:0; }
+@media print{
+  :root{
+    --ground:#FFFFFF; --surface:#FFFFFF; --surface-2:#F4F7F8;
+    --ink:#16212A; --ink-soft:#4A5A66; --ink-faint:#7A8C97;
+    --rule:#C9D4DA; --rule-soft:#E2E9EC; --accent:#1F5F80;
+    --series-a:#3585B4; --series-b:#C77B12;
+    --prio-low:#4A7C59; --prio-med:#A8761C; --prio-high:#AF3527;
+    --shadow:none;
+  }
+  html,body{ background:#fff !important; }
+  *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  .deck{ display:block; padding:0; gap:0; }
+  .slide{
+    width:100%; max-width:none; height:7.5in; aspect-ratio:auto; min-height:0;
+    border:none; border-radius:0; box-shadow:none;
+    padding:0.40in 0.60in 0.28in; break-after:page; page-break-after:always;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .slide:last-of-type{ break-after:auto; page-break-after:auto; }
+  .slide__body{ overflow:visible; }
+  .bar{ display:none !important; }
+  .notes{ display:none !important; }
+
+  /* The narrow-screen breakpoint must not apply to paper: the page is wide,
+     so the multi-column blocks stay in columns. */
+  .cols--2{ grid-template-columns:1fr 1fr !important; }
+  .cols--3{ grid-template-columns:repeat(3,1fr) !important; }
+  .stat-row{ grid-template-columns:repeat(3,1fr) !important; }
+
+  /* Print pages are a fixed height, so the roomier on-screen spacing has to
+     come in a little or the tallest slide spills onto an extra page. */
+  .cols{ gap:20px !important; }
+  .cols--2, .cols--3{ margin-top:16px !important; }
+  .stat-row{ margin-top:14px !important; }
+  .slide p[style*="margin-top"]{ margin-top:14px !important; }
+  .point p{ font-size:13px; }
+  .stat .n{ font-size:26px; }
+  .stat{ padding:13px 16px; }
+}
 </style>
 </head>
 <body>
@@ -574,6 +630,7 @@ html{ scroll-behavior:smooth; }
 </div>
 
 <div class="bar">
+  <button id="presentBtn" type="button" aria-pressed="false">Present</button>
   <button id="notesBtn" type="button" aria-pressed="false">Notes</button>
   <span class="counter"><span id="cur">1</span> / 16</span>
 </div>
@@ -603,8 +660,42 @@ html{ scroll-behavior:smooth; }
     if(i < 0 || i >= slides.length) return;
     slides[i].scrollIntoView({ behavior:'smooth', block:'start' });
   }
+  var presentBtn = document.getElementById('presentBtn');
+
+  function syncPresent(on){
+    document.body.classList.toggle('presenting', on);
+    document.documentElement.classList.toggle('presenting-html', on);
+    presentBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    presentBtn.textContent = on ? 'Exit' : 'Present';
+    var i = Math.max(0, parseInt(cur.textContent, 10) - 1);
+    setTimeout(function(){
+      slides[i].scrollIntoView({ behavior:'auto', block:'start' });
+    }, 60);
+  }
+
+  function togglePresent(){
+    var on = !document.body.classList.contains('presenting');
+    syncPresent(on);
+    var el = document.documentElement;
+    if(on && el.requestFullscreen){ el.requestFullscreen().catch(function(){}); }
+    if(!on && document.fullscreenElement && document.exitFullscreen){
+      document.exitFullscreen().catch(function(){});
+    }
+  }
+
+  presentBtn.addEventListener('click', togglePresent);
+  // Leaving fullscreen by any route (Esc, the system chrome) exits present mode.
+  document.addEventListener('fullscreenchange', function(){
+    if(!document.fullscreenElement && document.body.classList.contains('presenting')){
+      syncPresent(false);
+    }
+  });
+
   document.addEventListener('keydown', function(e){
     if(e.target.tagName === 'BUTTON' && e.key === ' ') return;
+    if(e.key === 'p' || e.key === 'P' || e.key === 'f' || e.key === 'F'){
+      e.preventDefault(); togglePresent(); return;
+    }
     if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){ e.preventDefault(); go(1); }
     if(e.key === 'ArrowLeft'  || e.key === 'PageUp'){ e.preventDefault(); go(-1); }
     if(e.key === 'n' || e.key === 'N'){ btn.click(); }
