@@ -39,6 +39,12 @@ You can also triage a single inquiry from the command line:
 python -m src.main "My brakes are grinding and the pedal feels soft."
 ```
 
+Run the tests (fast, and they do not need Ollama running):
+
+```bash
+pytest
+```
+
 And reproduce the evaluation numbers below:
 
 ```bash
@@ -366,6 +372,29 @@ laptop with no network call.
 
 ---
 
+## Testing strategy
+
+The two halves of this system need different kinds of checking, so they get
+different ones.
+
+**Deterministic logic is unit tested.** The routing table, the priority vote
+and its safety bias, the similarity rescaling, the confidence fusion, the
+parsing of the classifier's reply, and the trimming of resolution notes are all
+decided by arithmetic or a lookup. `tests/` covers them with 37 assertions that
+run in under a second and need no model server.
+
+**Model-dependent behaviour is measured, not asserted.** Asserting that a given
+inquiry returns `service` would be testing the model rather than the code, and
+it would fail for reasons that are not bugs. Those parts are evaluated
+statistically by `src/evaluate.py` instead, which is what the results section
+below reports.
+
+Writing the tests was worth it immediately: the first run failed, and the
+failure was in a test whose similarity values let the high-priority neighbour
+win the vote outright, so the safety bias it claimed to exercise never fired.
+
+---
+
 ## Presentation
 
 The slide deck is in this repository at `presentation/index.html`. Open it in a
@@ -378,6 +407,7 @@ speaker notes.
 
 ```
 presentation/index.html  Slide deck (Part B)
+tests/                   Unit tests for the deterministic logic
 app/app.py             Streamlit chat UI, wired to the pipeline
 src/config.py          All tunables and measured constants
 src/knowledge_base.py  Loading, embedding, Chroma store, retrieval

@@ -1,15 +1,22 @@
+# Pinned to the versions this was built and tested against, so that a
+# reviewer running `pip install -r requirements.txt` gets the same behaviour.
+# Python 3.12 or newer.
+
 # Core UI
-streamlit>=1.36
+streamlit==1.63.0
 
 # LLM / orchestration
-langchain>=0.3
-langgraph>=0.2
-langchain-community>=0.3
-langchain-ollama>=0.2
-ollama>=0.3
+langchain==1.4.0
+langgraph==1.2.11
+langchain-community==0.4.2
+langchain-ollama==1.1.0
+ollama==0.6.2
 
 # Vector store
-chromadb>=0.5
+chromadb==1.5.9
 
 # Data
-pandas>=2.0
+pandas==3.0.5
+
+# Tests
+pytest==9.1.1
