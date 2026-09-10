@@ -187,6 +187,17 @@ body.show-notes .notes{ display:block; }
 .slide .legend{ font-size:1.4cqw; }
 .slide .pill{ font-size:1.2cqw; }
 .chart{ max-width:66cqw; }
+/* A chart beside the numbers behind it. The chart carries the shape, the
+   table carries the denominators, which is what makes the shape credible. */
+.evidence{ display:grid; grid-template-columns:1.5fr 1fr; gap:2.2cqw;
+  align-items:center; margin-top:0.6cqw; }
+.evidence .chart{ max-width:none; margin:0; }
+.slide .compact th, .slide .compact td{ padding:0.45cqw 0.7cqw; }
+.slide .compact td{ font-size:1.32cqw; }
+.slide .compact th{ font-size:1.0cqw; }
+.slide .compact tr.total td{ color:var(--ink); font-weight:600;
+  border-top:1px solid var(--rule); }
+.slide .compact tr.none td{ color:var(--ink-faint); }
 
 /* Centre the content in the space the slide actually has. `safe` keeps a
    full slide pinned to the top instead of clipping it at both ends. */
@@ -473,7 +484,8 @@ body.presenting .bar:hover{ opacity:1; }
   <div class="slide__body">
     <h2>Does the confidence score actually work?</h2>
     <p>If it does not track correctness it is decoration, because it decides what reaches a human. Measured by leave-one-out over all 300 cases.</p>
-    <figure class="chart" style="margin-top:4px">
+    <div class="evidence">
+    <figure class="chart">
       <svg viewBox="0 0 620 300" role="img" aria-label="Bar chart of category accuracy by confidence band: 22 percent in the lowest band rising to 100 percent in the highest.">
         <line class="g-line" x1="60" y1="40" x2="600" y2="40"></line>
         <line class="g-line" x1="60" y1="90" x2="600" y2="90"></line>
@@ -507,8 +519,22 @@ body.presenting .bar:hover{ opacity:1; }
         <text class="g-sub" x="529" y="274" text-anchor="middle">n=120</text>
         <text class="g-lab" x="330" y="294" text-anchor="middle">confidence band</text>
       </svg>
-      <figcaption>Category accuracy rises with confidence, from 29% in the lowest band to 98% in the highest. The empty middle band is the honest caveat: the cross-check signal is binary and carries the most weight, so scores cluster at the ends.</figcaption>
     </figure>
+    <div class="table-wrap">
+      <table class="compact">
+        <thead><tr><th>Band</th><th class="num">Cases</th><th class="num">Right</th><th class="num">Acc.</th></tr></thead>
+        <tbody>
+          <tr><td>0.0&ndash;0.2</td><td class="num">41</td><td class="num">12</td><td class="num">29.3%</td></tr>
+          <tr><td>0.2&ndash;0.4</td><td class="num">27</td><td class="num">21</td><td class="num">77.8%</td></tr>
+          <tr class="none"><td>0.4&ndash;0.6</td><td class="num">0</td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
+          <tr><td>0.6&ndash;0.8</td><td class="num">112</td><td class="num">104</td><td class="num">92.9%</td></tr>
+          <tr><td>0.8&ndash;1.0</td><td class="num">120</td><td class="num">118</td><td class="num">98.3%</td></tr>
+          <tr class="total"><td>All</td><td class="num">300</td><td class="num">255</td><td class="num">85.0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+    <figcaption style="margin-top:1.1cqw">Accuracy rises with confidence, 29% in the lowest band to 98% in the highest. The bands sum back to the 85.0% headline. The empty middle band is the caveat: the cross-check signal is binary and carries the most weight, so scores cluster at the ends.</figcaption>
   </div>
   <div class="notes"><b>Speaker notes</b>This is the most important slide in the deck. The sentence is: when the system is confident it is right, and when it is unsure it really is more likely to be wrong. Then point at the gap in the middle and explain it yourself before anyone asks.</div>
 </section>
@@ -523,6 +549,7 @@ body.presenting .bar:hover{ opacity:1; }
       <span><i style="background:var(--series-a)"></i>Handled automatically</span>
       <span><i style="background:var(--series-b)"></i>Accuracy on those</span>
     </div>
+    <div class="evidence">
     <figure class="chart">
       <svg viewBox="0 0 620 300" role="img" aria-label="Grouped bar chart comparing share handled automatically against accuracy on those, at three escalation thresholds.">
         <line class="g-line" x1="60" y1="40" x2="600" y2="40"></line>
@@ -553,8 +580,19 @@ body.presenting .bar:hover{ opacity:1; }
         <text class="g-sub" x="330" y="274" text-anchor="middle">default</text>
         <text class="g-lab" x="330" y="294" text-anchor="middle">escalation threshold</text>
       </svg>
-      <figcaption>At the default threshold, sending the least confident quarter of inquiries to a person lifts accuracy on everything else from 85.0% to 95.7%.</figcaption>
     </figure>
+    <div class="table-wrap">
+      <table class="compact">
+        <thead><tr><th>Threshold</th><th class="num">Auto</th><th class="num">Acc.</th><th class="num">To human</th></tr></thead>
+        <tbody>
+          <tr><td>0.0 none</td><td class="num">300</td><td class="num">85.0%</td><td class="num">0</td></tr>
+          <tr class="total"><td>0.5 default</td><td class="num">232</td><td class="num">95.7%</td><td class="num">68</td></tr>
+          <tr><td>0.8 strict</td><td class="num">120</td><td class="num">98.3%</td><td class="num">180</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+    <figcaption style="margin-top:1.1cqw">At the default threshold, sending the least confident 68 inquiries to a person lifts accuracy on the remaining 232 from 85.0% to 95.7%.</figcaption>
   </div>
   <div class="notes"><b>Speaker notes</b>One sentence does this slide. Give up roughly a quarter of the volume to a human, and what is left is right almost ninety six times out of a hundred. That is the business case.</div>
 </section>
