@@ -602,11 +602,11 @@ body.presenting .bar:hover{ opacity:1; }
   <div class="eyebrow">11 · Results</div>
   <div class="slide__body">
     <h2>Top-K was chosen by measuring, not by feel</h2>
-    <p>Top-K is configurable, so the default should be defensible. Swept against ground truth over all 300 cases. This isolates retrieval, so the category column is the neighbour vote alone with no model involved, which is why it sits below the 85.0% headline.</p>
+    <p>Top-K is configurable, so the default should be defensible. Swept against ground truth over all 300 cases. Top-K only affects retrieval, so the sweep isolates it: the category column is the neighbour vote on its own, with no model involved. It is not the shipped pipeline, which reads 85.0%.</p>
     <div class="cols cols--2" style="margin-top:16px">
       <div class="table-wrap">
         <table>
-          <thead><tr><th class="num">Top-K</th><th class="num">Cat. acc. (kNN)</th><th class="num">Priority acc.</th><th class="num">Under-triage</th></tr></thead>
+          <thead><tr><th class="num">Top-K</th><th class="num">Retrieval only</th><th class="num">Priority acc.</th><th class="num">Under-triage</th></tr></thead>
           <tbody>
             <tr><td class="num">1</td><td class="num">77.7%</td><td class="num">52.7%</td><td class="num">17.3%</td></tr>
             <tr><td class="num">3</td><td class="num">80.7%</td><td class="num">54.3%</td><td class="num">16.7%</td></tr>
