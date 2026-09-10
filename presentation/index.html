@@ -622,11 +622,10 @@ body.presenting .bar:hover{ opacity:1; }
       </div>
       <div>
         <div class="point"><h3>Five is the knee</h3><p>Accuracy climbs steeply to five and then flattens, while every extra neighbour adds latency and dilutes the vote. Going from three to five buys seven points of priority accuracy. Going from five to ten buys almost nothing.</p></div>
-        <div class="point" style="margin-top:18px"><h3>A bug this caught</h3><p>The safety bias threshold was originally 0.75. Measurement showed that sits below the lowest real similarity in the data, so it fired on 61% of all cases when only 18% are genuinely high priority. It is now set from the measured distribution, and fires on 9%.</p></div>
       </div>
     </div>
   </div>
-  <div class="notes"><b>Speaker notes</b>Mention the bug on purpose. It shows the evaluation harness earned its place by catching something you had got wrong, rather than just producing numbers that flatter you.</div>
+  <div class="notes"><b>Speaker notes</b>Point at the K=5 row and say accuracy stops improving after it. The column is retrieval on its own, not the shipped pipeline, so do not let the 85.0% at K=10 be confused with the headline. Keep this slide short.</div>
 </section>
 
 <!-- 13 -->
