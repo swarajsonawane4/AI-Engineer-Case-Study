@@ -80,6 +80,13 @@ strong{ color:var(--ink); font-weight:600; }
 .pipeline-strip b{ background:var(--surface-2); border:1px solid var(--rule-soft);
   border-radius:3px; padding:4px 9px; font-weight:500; color:var(--ink); }
 .pipeline-strip i{ color:var(--ink-faint); font-style:normal; }
+.title-meta span.repo{ font-family:var(--mono); font-size:12.5px; letter-spacing:-.01em; }
+.closing{ display:flex; align-items:center; justify-content:space-between; gap:20px;
+  flex-wrap:wrap; margin-top:26px; padding-top:14px; border-top:1px solid var(--rule-soft); }
+.closing .ask{ font-family:var(--mono); font-size:13px; color:var(--ink-faint); }
+.closing .repo-pill{ font-family:var(--mono); font-size:12.5px; color:var(--ink);
+  background:var(--surface-2); border:1px solid var(--rule); border-radius:4px;
+  padding:5px 11px; }
 
 /* Generic blocks */
 .cols{ display:grid; gap:26px; }
@@ -231,6 +238,7 @@ body.presenting .bar:hover{ opacity:1; }
     <div>PRESENTED BY<span>Swaraj Sonawane</span></div>
     <div>STACK<span>LangGraph · Ollama · ChromaDB · Streamlit</span></div>
     <div>RUNS<span>Fully local, no API key</span></div>
+    <div>CODE<span class="repo">github.com/swarajsonawane4/AI-Engineer-Case-Study</span></div>
   </div>
   <div class="notes"><b>Speaker notes</b>Keep this short. Say who you are, say the system reads a customer message and decides what it is about, how urgent it is, and who should handle it. Then move on.</div>
 </section>
@@ -622,7 +630,10 @@ body.presenting .bar:hover{ opacity:1; }
       <div class="point"><h3>Measured, not asserted</h3><p>Every constant in the config was set from an evaluation run, and one of them was wrong until that run caught it.</p></div>
       <div class="point"><h3>Knows when to stop</h3><p>The system escalates rather than guessing, and shows the cases behind every decision.</p></div>
     </div>
-    <p style="margin-top:26px;font-family:var(--mono);font-size:13px;color:var(--ink-faint)">Questions welcome.</p>
+    <div class="closing">
+      <span class="ask">Questions welcome.</span>
+      <span class="repo-pill">github.com/swarajsonawane4/AI-Engineer-Case-Study</span>
+    </div>
   </div>
   <div class="notes"><b>Speaker notes</b>Land on the three numbers, then stop talking. Do not add a new idea on the last slide. Leave room for questions, they are half the assessment.</div>
 </section>
