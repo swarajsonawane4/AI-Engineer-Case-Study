@@ -164,6 +164,34 @@ body.show-notes .notes{ display:block; }
   .cols--2,.cols--3,.stat-row{ grid-template-columns:1fr; }
 }
 @media (prefers-reduced-motion:reduce){ *{ scroll-behavior:auto !important; } }
+/* --- Slide typography scales with the slide itself ---------------------
+   The deck is viewed at three different sizes: a 1060px card while editing,
+   the full width of a display in present mode, and a 1280px page in the PDF.
+   Fixed pixel type looks correct in one of those and small in the other two,
+   so every size inside a slide is expressed in cqw (percent of the slide's
+   own width) and scales with it automatically. */
+.slide{ container-type:inline-size; }
+.slide .eyebrow{ font-size:1.15cqw; }
+.slide h2{ font-size:3.0cqw; margin-bottom:1.3cqw; }
+.slide p{ font-size:1.85cqw; }
+.slide p.lead{ font-size:2.15cqw; }
+.slide li{ font-size:1.8cqw; }
+.slide .point h3{ font-size:1.7cqw; }
+.slide .point p{ font-size:1.62cqw; }
+.slide th{ font-size:1.12cqw; }
+.slide td{ font-size:1.5cqw; }
+.slide .output{ font-size:1.45cqw; }
+.slide .stat .n{ font-size:3.6cqw; }
+.slide .stat .l{ font-size:1.45cqw; }
+.slide figcaption{ font-size:1.32cqw; }
+.slide .legend{ font-size:1.4cqw; }
+.slide .pill{ font-size:1.2cqw; }
+.chart{ max-width:66cqw; }
+
+/* Centre the content in the space the slide actually has. `safe` keeps a
+   full slide pinned to the top instead of clipping it at both ends. */
+.slide__body{ display:flex; flex-direction:column; justify-content:safe center; }
+
 html{ scroll-behavior:smooth; }
 
 /* --- Fullscreen present mode (press P, or the Present button) --- */
@@ -217,9 +245,7 @@ body.presenting .bar:hover{ opacity:1; }
   .cols--2, .cols--3{ margin-top:16px !important; }
   .stat-row{ margin-top:14px !important; }
   .slide p[style*="margin-top"]{ margin-top:14px !important; }
-  .point p{ font-size:13px; }
-  .stat .n{ font-size:26px; }
-  .stat{ padding:13px 16px; }
+  .stat{ padding:1.3cqw 1.6cqw; }
 }
 </style>
 </head>
